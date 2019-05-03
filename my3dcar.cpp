@@ -7,12 +7,11 @@ using namespace std;
 bool specialStatus[256];
 int const FPS = 60;
 float const PI = 3.14;
-double const MOVE_SPEED = 10, TURN_SPEED = 0.3, ACC = 0.1;
+double const MOVE_SPEED = 20, TURN_SPEED = 0.4, ACC = 0.1;
+const float WIDTH = 60, LENGTH = 180, HEIGHT = 40;
 struct car {
-  const double WIDTH = 15;
-  const double LENGTH = 40;
-  double x = 0;
-  double y = 0;
+  double x = -300;
+  double y = 300;
   double radian = PI;
   double tireAngle = 0;
   double vx = 0;
@@ -27,11 +26,25 @@ struct cpoint {
 
 car myCar;
 
-float y = 50.0f;
+float y = HEIGHT * 3;
 
-double cross(cpoint p0, cpoint p1, cpoint p2) {
-  return (p1.x - p0.x) * (p2.y - p0.y) - (p2.x - p0.x) * (p1.y - p0.y);
-}
+cpoint poly[9] = {{0, 0},       {0, 1000},    {500, 1500},
+                  {1500, 1500}, {2000, 1000}, {2000, 0},
+                  {1500, -500}, {500, -500},  {0, 0}};
+cpoint outer[27] = {{0, 0},       {0, 11},      {10, 11},     {10, 8},
+                    {11, 8},      {11, 5.5},      {10, 5.5},      {10, 4},
+                    {10.0, 4.0},  {9.96, 3.61}, {9.85, 3.24}, {9.66, 2.89},
+                    {9.41, 2.59}, {9.11, 2.34}, {8.77, 2.15}, {8.39, 2.04},
+                    {8.0, 2.0},   {7.61, 2.04}, {7.24, 2.15}, {6.89, 2.34},
+                    {6.59, 2.58}, {6.34, 2.89}, {6.15, 3.23}, {6.04, 3.61},
+                    {6, 4},       {6, 0},       {0, 0}};
+cpoint inner[27] = {{2, 3},       {2, 9},       {5, 9},       {5, 7},
+                    {6, 7},       {6, 9},       {8, 9},       {8, 4},
+                    {8.0, 4.0},   {7.96, 4.39}, {7.85, 4.76}, {7.66, 5.11},
+                    {7.41, 5.41}, {7.11, 5.66}, {6.77, 5.85}, {6.39, 5.96},
+                    {6.0, 6.0},   {5.61, 5.96}, {5.24, 5.85}, {4.89, 5.66},
+                    {4.59, 5.42}, {4.34, 5.11}, {4.15, 4.77}, {4.04, 4.39},
+                    {4, 4},       {4, 3},       {2, 3}};
 
 bool complInsideConvex(const cpoint &p, cpoint *con, int n) {
   int j = n - 1, res = 0;
@@ -90,33 +103,6 @@ void drawPolygon(const cpoint poly[], const int n) {
   }
 }
 
-void drawTrack(const float x[], const float y[], const int n, int debug = 0) {
-  // double const w = 50 * 1.414;
-  // float tmpx[n + 1], tmpy[n + 1], alpha[n + 1], tmpAlpha;
-  // for (int i = 0; i <= n; ++i) {
-  //   if (abs(x[i] - x[i + 1]) < 1e-2) {
-  //     alpha[i] = y[i + 1] > y[i] ? 0 : PI;
-  //   } else
-  //     alpha[i] = abs(y[i] - y[i + 1]) < 1e-2
-  //                    ? PI / 2 * (-1 + 2 * (x[i] < x[i + 1]))
-  //                    : atan((x[i] - x[i + 1]) / (y[i] - y[i + 1]));
-  //   if (y[i] - y[i + 1] > 0) alpha[i] += PI;
-  //   if (debug) cout << alpha[i] / PI * 180 << ' ';
-  // }
-  // if (debug) cout << endl;
-  // for (int i = 1; i <= n; ++i) {
-  //   tmpAlpha = (fmod(PI + alpha[i - 1], 2 * PI) + alpha[i]) / 2;
-  //   tmpx[i] = x[i] + w * sin(tmpAlpha);
-  //   tmpy[i] = y[i] + w * cos(tmpAlpha);
-  //   if (debug)
-  //     cout << tmpAlpha / PI * 180 << ' ' << x[i] << ' ' << y[i] << ' '
-  //          << tmpx[i] << ' ' << tmpy[i] << endl;
-  // }
-  // tmpx[0] = tmpx[n];
-  // tmpy[0] = tmpy[n];
-  // drawPolygon(tmpx, tmpy, n);
-}
-
 void drawCar() {
   // cout << myCar.radian * 180 / PI << ' ' << myCar.y << ' ' << myCar.x <<
   // endl;
@@ -125,116 +111,116 @@ void drawCar() {
   double alpha = myCar.y == 0 ? PI / 2 : atan(myCar.x / myCar.y);
   double r1 = sqrt(myCar.x * myCar.x + myCar.y * myCar.y);
   if (myCar.y < 0)
-    glTranslatef(r1 * cos(alpha + myCar.radian), 22.5f,
+    glTranslatef(r1 * cos(alpha + myCar.radian), HEIGHT * 1.5 + 10,
                  r1 * sin(alpha + myCar.radian));
   else
-    glTranslatef(-r1 * cos(alpha + myCar.radian), 22.5f,
+    glTranslatef(-r1 * cos(alpha + myCar.radian), HEIGHT * 1.5 + 10,
                  -r1 * sin(alpha + myCar.radian));
   // dire
   glRotatef(-90.0f, 0.0f, 1.0f, 0.0f);
   //车下半部 左
   glBegin(GL_POLYGON);
   glColor3f(0.1, 0.1, 0.8);
-  glVertex3f(-40.0f, 0.0f, 15.0f);
-  glVertex3f(40.0f, 0.0f, 15.0f);
+  glVertex3f(-LENGTH, 0.0f, WIDTH);
+  glVertex3f(LENGTH, 0.0f, WIDTH);
   // glColor3f(1, 0.5, 0.8);
-  glVertex3f(40.0f, -15.0f, 15.0f);
-  glVertex3f(-40.0f, -15.0f, 15.0f);
+  glVertex3f(LENGTH, -HEIGHT, WIDTH);
+  glVertex3f(-LENGTH, -HEIGHT, WIDTH);
   glEnd();
   //车下半部 后
   glBegin(GL_POLYGON);
   glColor3f(0.3, 0.2, 0.5);
-  glVertex3f(40.0f, 0.0f, -15.0f);
-  glVertex3f(40.0f, 0.0f, 15.0f);
-  glVertex3f(40.0f, -15.0f, 15.0f);
-  glVertex3f(40.0f, -15.0f, -15.0f);
+  glVertex3f(LENGTH, 0.0f, -WIDTH);
+  glVertex3f(LENGTH, 0.0f, WIDTH);
+  glVertex3f(LENGTH, -HEIGHT, WIDTH);
+  glVertex3f(LENGTH, -HEIGHT, -WIDTH);
   glEnd();
   //车下半部 前
   glBegin(GL_POLYGON);
   glColor3f(0.3, 0.1, 0.3);
-  glVertex3f(-40.0f, 0.0f, -15.0f);
-  glVertex3f(-40.0f, 0.0f, 15.0f);
-  glVertex3f(-40.0f, -15.0f, 15.0f);
-  glVertex3f(-40.0f, -15.0f, -15.0f);
+  glVertex3f(-LENGTH, 0.0f, -WIDTH);
+  glVertex3f(-LENGTH, 0.0f, WIDTH);
+  glVertex3f(-LENGTH, -HEIGHT, WIDTH);
+  glVertex3f(-LENGTH, -HEIGHT, -WIDTH);
   glEnd();
   //车下半部 右
   glBegin(GL_POLYGON);
   glColor3f(0.1, 0.1, 0.8);
-  glVertex3f(-40.0f, 0.0f, -15.0f);
-  glVertex3f(40.0f, 0.0f, -15.0f);
+  glVertex3f(-LENGTH, 0.0f, -WIDTH);
+  glVertex3f(LENGTH, 0.0f, -WIDTH);
   // glColor3f(1, 0.5, 0.8);
-  glVertex3f(40.0f, -15.0f, -15.0f);
-  glVertex3f(-40.0f, -15.0f, -15.0f);
+  glVertex3f(LENGTH, -HEIGHT, -WIDTH);
+  glVertex3f(-LENGTH, -HEIGHT, -WIDTH);
   glEnd();
   //车下半部 上
   glBegin(GL_POLYGON);
   glColor3f(0, 0, 1);
-  glVertex3f(-40.0f, 0.0f, 15.0f);
-  glVertex3f(-40.0f, 0.0f, -15.0f);
-  glVertex3f(40.0f, 0.0f, -15.0f);
-  glVertex3f(40.0f, 0.0f, 15.0f);
+  glVertex3f(-LENGTH, 0.0f, WIDTH);
+  glVertex3f(-LENGTH, 0.0f, -WIDTH);
+  glVertex3f(LENGTH, 0.0f, -WIDTH);
+  glVertex3f(LENGTH, 0.0f, WIDTH);
   glEnd();
   //车下半部 下
   glBegin(GL_POLYGON);
   glColor3f(0.8, 0.5, 0.2);
-  glVertex3f(-40.0f, -15.0f, 15.0f);
-  glVertex3f(-40.0f, -15.0f, -15.0f);
-  glVertex3f(40.0f, -15.0f, -15.0f);
-  glVertex3f(40.0f, -15.0f, 15.0f);
+  glVertex3f(-LENGTH, -HEIGHT, WIDTH);
+  glVertex3f(-LENGTH, -HEIGHT, -WIDTH);
+  glVertex3f(LENGTH, -HEIGHT, -WIDTH);
+  glVertex3f(LENGTH, -HEIGHT, WIDTH);
   glEnd();
   //车上半部 左
   glBegin(GL_POLYGON);
   glColor3f(0, 0, 1);
-  glVertex3f(-20.0f, 0.0f, 15.0f);
-  glVertex3f(-10.0f, 10.0f, 15.0f);
-  glVertex3f(20.0f, 10.0f, 15.0f);
-  glVertex3f(25.0f, 0.0f, 15.0f);
+  glVertex3f(-LENGTH / 2, 0.0f, WIDTH);
+  glVertex3f(-LENGTH / 4, HEIGHT, WIDTH);
+  glVertex3f(LENGTH / 2, HEIGHT, WIDTH);
+  glVertex3f(LENGTH / 8 * 5, 0.0f, WIDTH);
   glEnd();
   //车上半部 右
   glBegin(GL_POLYGON);
   glColor3f(0, 0, 1);
-  glVertex3f(-20.0f, 0.0f, -15.0f);
-  glVertex3f(-10.0f, 10.0f, -15.0f);
-  glVertex3f(20.0f, 10.0f, -15.0f);
-  glVertex3f(25.0f, 0.0f, -15.0f);
+  glVertex3f(-LENGTH / 2, 0.0f, -WIDTH);
+  glVertex3f(-LENGTH / 4, HEIGHT, -WIDTH);
+  glVertex3f(LENGTH / 2, HEIGHT, -WIDTH);
+  glVertex3f(LENGTH / 8 * 5, 0.0f, -WIDTH);
   glEnd();
   //车上半部 上
   glBegin(GL_POLYGON);
   glColor3f(0.3, 0.2, 0.5);
-  glVertex3f(-10.0f, 10.0f, 15.0f);
-  glVertex3f(-10.0f, 10.0f, -15.0f);
-  glVertex3f(20.0f, 10.0f, -15.0f);
-  glVertex3f(20.0f, 10.0f, 15.0f);
+  glVertex3f(-LENGTH / 4, HEIGHT, WIDTH);
+  glVertex3f(-LENGTH / 4, HEIGHT, -WIDTH);
+  glVertex3f(LENGTH / 2, HEIGHT, -WIDTH);
+  glVertex3f(LENGTH / 2, HEIGHT, WIDTH);
   glEnd();
   //车上半部 前
   glBegin(GL_POLYGON);
   glColor3f(0.5, 0.8, 0.8);
-  glVertex3f(-10.0f, 10.0f, 15.0f);
-  glVertex3f(-20.0f, 0.0f, 15.0f);
-  glVertex3f(-20.0f, 0.0f, -15.0f);
-  glVertex3f(-10.0f, 10.0f, -15.0f);
+  glVertex3f(-LENGTH / 4, HEIGHT, WIDTH);
+  glVertex3f(-LENGTH / 2, 0.0f, WIDTH);
+  glVertex3f(-LENGTH / 2, 0.0f, -WIDTH);
+  glVertex3f(-LENGTH / 4, HEIGHT, -WIDTH);
   glEnd();
   // //车上半部 后
   glBegin(GL_POLYGON);
   glColor3f(0, 0.5, 0.5);
-  glVertex3f(20.0f, 10.0f, 15.0f);
-  glVertex3f(20.0f, 10.0f, -15.0f);
-  glVertex3f(25.0f, 0.0f, -15.0f);
-  glVertex3f(25.0f, 0.0f, 15.0f);
+  glVertex3f(LENGTH / 2, HEIGHT, WIDTH);
+  glVertex3f(LENGTH / 2, HEIGHT, -WIDTH);
+  glVertex3f(LENGTH / 8 * 5, 0.0f, -WIDTH);
+  glVertex3f(LENGTH / 8 * 5, 0.0f, WIDTH);
   glEnd();
   //车轮
-  float pos[4][3] = {{-20.0f, -15.0f, 15.0f},
-                     {-20.0f, -15.0f, -15.0f},
-                     {25.0f, -15.0f, 15.0f},
-                     {25.0f, -15.0f, -15.0f}};
+  float pos[4][3] = {{-LENGTH / 2, -HEIGHT, WIDTH},
+                     {-LENGTH / 2, -HEIGHT, -WIDTH},
+                     {LENGTH / 8 * 5, -HEIGHT, WIDTH},
+                     {LENGTH / 8 * 5, -HEIGHT, -WIDTH}};
   for (int i = 0; i < 4; ++i) {
     glPushMatrix();
     glTranslated(pos[i][0], pos[i][1], pos[i][2]);
     if (i < 2) glRotatef(myCar.tireAngle, 0.0f, 1.0f, 0.0f);
     glColor3f(0, 0, 0);
-    glutSolidTorus(2, 5, 5, 100);
+    glutSolidTorus(10, HEIGHT / 2, 5, 100);
     glColor3f(0.2, 0.2, 0.2);
-    glutSolidTorus(2, 2, 5, 100);
+    glutSolidTorus(10, 10, 5, 100);
     glPopMatrix();
   }
   glPopMatrix();
@@ -249,21 +235,27 @@ void drawGround() {
   glVertex3f(10000.0f, 0.0f, 10000.0f);
   glVertex3f(10000.0f, 0.0f, -10000.0f);
   glEnd();
-  cpoint poly[9] = {{0, 0},       {0, 1000},    {500, 1500},
-                    {1500, 1500}, {2000, 1000}, {2000, 0},
-                    {1500, -500}, {500, -500},  {0, 0}};
-  cpoint p[4] = {{myCar.y + myCar.WIDTH, -myCar.x - myCar.WIDTH},
-                 {myCar.y + myCar.WIDTH, -myCar.x + myCar.WIDTH},
-                 {myCar.y - myCar.WIDTH, -myCar.x + myCar.WIDTH},
-                 {myCar.y - myCar.WIDTH, -myCar.x - myCar.WIDTH}};
+  // FIX: COLLISION BOX NOT CORRECT
+  cpoint p[4] = {{myCar.y + WIDTH, -myCar.x - LENGTH},
+                 {myCar.y + WIDTH, -myCar.x + LENGTH},
+                 {myCar.y - WIDTH, -myCar.x + LENGTH},
+                 {myCar.y - WIDTH, -myCar.x - LENGTH}};
   glColor3f(1.0f, 1.0f, 1.0f);
   for (int i = 0; i < 4; ++i) {
-    if (!complInsideConvex(p[i], poly, 8)) {
+    if (!complInsideConvex(p[i], outer, 26)) {
       glColor3f(1.0f, 0.0f, 0.0f);
       break;
     }
   }
-  drawPolygon(poly, 8);
+  drawPolygon(outer, 26);
+  glColor3f(1.0f, 1.0f, 1.0f);
+  for (int i = 0; i < 4; ++i) {
+    if (complInsideConvex(p[i], inner, 26)) {
+      glColor3f(1.0f, 0.0f, 0.0f);
+      break;
+    }
+  }
+  drawPolygon(inner, 26);
 }
 
 void renderScene(void) {
@@ -273,10 +265,10 @@ void renderScene(void) {
   // Reset transformations
   glLoadIdentity();
   // Set the camera
-  float distance = 200 + myCar.vx * 6;
+  float distance = WIDTH * 8 + (myCar.vx > 0 ? myCar.vx * WIDTH / 4 : 0);
   gluLookAt(-myCar.y + distance * sin(myCar.radian - myCar.delta), y,
             -myCar.x + distance * cos(myCar.radian - myCar.delta), -myCar.y,
-            22.0f, -myCar.x, 0.0f, 1.0f, 0.0f);
+            HEIGHT, -myCar.x, 0.0f, 1.0f, 0.0f);
 
   drawCar();
   drawGround();
@@ -361,6 +353,14 @@ void timerFunc(int value) {
 }
 
 int main(int argc, char **argv) {
+  for (auto &c : outer) {
+    c.x *= 210;
+    c.y *= 210;
+  }
+  for (auto &c : inner) {
+    c.x *= 210;
+    c.y *= 210;
+  }
   // init GLUT and create window
   glutInit(&argc, argv);
   glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA);
@@ -371,7 +371,7 @@ int main(int argc, char **argv) {
   // register callbacks
   glutDisplayFunc(renderScene);
   glutReshapeFunc(changeSize);
-  glutIdleFunc(renderScene);
+  // glutIdleFunc(renderScene);
 
   // glutIgnoreKeyRepeat(1);
   // glutKeyboardFunc(processNormalKeys);
