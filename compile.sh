@@ -1,1 +1,1 @@
-g++ my3dcar.cpp -o my3dcar.exe -Wall -g -Og -static-libgcc -lglu32 -lfreeglut -lopengl32 -std=c++11
+g++ car.cpp game.cpp my3dcar.cpp -o my3dcar.exe -Wall -g -Og -lglu32 -lfreeglut -lopengl32 -std=c++11 && ./my3dcar
